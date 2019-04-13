@@ -8,8 +8,8 @@ class Checkout
   def checkout(skus)
     return -1 if check_skus(skus) == false
     @running_total = 0
-    sum(remove_items_on_special(summarise_order(skus)), STOCK_PRICES)
-    sum(summarise_order(skus), SPECIALS_PRICES)
+    sum(update_order_for_specials(summarise_order(skus)), STOCK_PRICES)
+    sum(@specials_summary, SPECIALS_PRICES)
     @running_total
   end
 
@@ -30,13 +30,13 @@ class Checkout
     order_summary
   end
 
-  def remove_items_on_special(order_summary)
-    specials_summary = {}
+  def update_order_for_specials(order_summary)
+    @specials_summary = {}
     bogof_remainder(order_summary)
     order_summary.each do |item, quantity|
 p 'item...'
 p item
-      add_items_on_special(specials_summary, item, quantity, SPECIALS_PRICES)
+      add_items_on_special(@specials_summary, item, quantity, SPECIALS_PRICES)
       specials_remainder(order_summary, item, quantity)
     end
     order_summary
@@ -44,10 +44,8 @@ p item
 
   def sum(order_summary, price_list)
     order_summary.each do |item, quantity|
-      item_quantity = quantity_item(order_summary, item, quantity, price_list)
 p 'quantity item...'
-p quantity_item(order_summary, item, quantity, price_list)
-      @running_total += item_quantity * price_list[item] if price_list.key?(item)
+      @running_total += order_summary[item] * price_list[item] if price_list.key?(item)
 p 'running total...'
 p @running_total
     end
@@ -60,9 +58,8 @@ p @running_total
   end
 
   def add_items_on_special(specials_summary, item, quantity, price_list)
-    special_item = (item.to_s + '_special').to_sym
     item_quantity = quantity / SPECIALS_QUANTS[item] if price_list.key?(item)
-    specials_summary[special_item] = item_quantity unless item_quantity == 0 || item_quantity.nil?
+    specials_summary[item] = item_quantity unless item_quantity == 0 || item_quantity.nil?
 p 'specials summary...'
 p specials_summary
   end
@@ -73,10 +70,5 @@ p specials_summary
 p 'remainder...'
 p remainder
     order_summary[item] = remainder unless remainder.nil?
-  end
-
-  def quantity_item(order_summary, item, quantity, price_list)
-    return quantity / SPECIALS_QUANTS[item] if price_list == SPECIALS_PRICES && price_list.key?(item)
-    return order_summary[item] if price_list == STOCK_PRICES
   end
 end
