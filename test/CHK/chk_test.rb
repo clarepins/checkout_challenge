@@ -76,4 +76,22 @@ p 'test_U_discounts'
     skus = 'UUU'
     assert_equal 120, Checkout.new.checkout(skus), 'U discounts'
   end
+
+  def test_group_discount
+p 'test_group_discount'
+    skus = 'XXX'
+    assert_equal 45, Checkout.new.checkout(skus), 'test group discount'
+  end
+
+  def test_group_discount_2
+p 'test_group_discount_2'
+    skus = 'XXYZ'
+    assert_equal 62, Checkout.new.checkout(skus), 'test group discount'
+  end
+
+  def test_group_discount_3
+p 'test_group_discount_3'
+    skus = 'ZZZSSSYYYYX'
+    assert_equal 172, Checkout.new.checkout(skus), 'test group discount where X and Y are charged'
+  end
 end

@@ -12,7 +12,7 @@ class Checkout
     H: 10,
     I: 35,
     J: 60,
-    K: 80,
+    K: 70,
     L: 90,
     M: 15,
     N: 40,
@@ -20,14 +20,14 @@ class Checkout
     P: 50,
     Q: 30,
     R: 50,
-    S: 30,
+    S: 20,
     T: 20,
     U: 40,
     V: 50,
     W: 20,
-    X: 90,
-    Y: 10,
-    Z: 50 }
+    X: 17,
+    Y: 20,
+    Z: 21 }
 
   SPECIALS_QUANTS = {
     A: 5,
@@ -45,7 +45,7 @@ class Checkout
     B: 45,
     F: 20,
     H: 80,
-    K: 150,
+    K: 120,
     P: 200,
     Q: 80,
     U: 120,
@@ -61,22 +61,19 @@ class Checkout
     H: 45,
     V: 90 }
 
-  # BOGOF = {
-  #   E: { quant: 2, free: :B },
-  #   N: { quant: 3, free: :M },
-  #   R: { quant: 3, free: :Q }
-  # }
+  GROUP = [:X, :Y, :T, :S, :Z]
 
   def checkout(skus)
     return -1 if check_skus(skus) == false
     @running_total = 0
-    order_summary = summarise_order(skus)
+    order = summarise_order(skus)
     specials_summary = {}
     specials_summary_2 = {}
-    remove_items_on_bogof(order_summary)
-    update_order_for_specials(order_summary, specials_summary, SPECIALS_QUANTS)
-    update_order_for_specials(order_summary, specials_summary_2, SPECIALS_QUANTS_2)
-    sum(order_summary, STOCK_PRICES)
+    remove_items_on_bogof(order)
+    update_order_for_groups(order)
+    update_order_for_specials(order, specials_summary, SPECIALS_QUANTS)
+    update_order_for_specials(order, specials_summary_2, SPECIALS_QUANTS_2)
+    sum(order, STOCK_PRICES)
     sum(specials_summary, SPECIALS_PRICES)
     sum(specials_summary_2, SPECIALS_PRICES_2)
     @running_total
@@ -91,32 +88,28 @@ class Checkout
   end
 
   def summarise_order(skus)
-    order_summary = {}
+    order = {}
     items_array = skus.chars.uniq
-    items_array.each do |item|
-      order_summary[item.to_sym] = skus.count(item)
-    end
-    order_summary
+    items_array.each { |item| order[item.to_sym] = skus.count(item) }
+    order
   end
 
-  def update_order_for_specials(order_summary, specials_summary, quant_list)
-    order_summary.each do |item, quantity|
+  def update_order_for_specials(order, specials_summary, quant_list)
+    order.each do |item, quantity|
       add_items_on_special(specials_summary, item, quantity, quant_list)
-      remove_items_on_special(order_summary, item, quantity, quant_list)
+      remove_items_on_special(order, item, quantity, quant_list)
     end
-    order_summary
+    order
   end
 
-  def sum(order_summary, price_list)
-    order_summary.each do |item, quantity|
-      @running_total += order_summary[item] * price_list[item]
-    end
+  def sum(order, price_list)
+    order.each { |item, quantity| @running_total += order[item] * price_list[item] }
   end
 
-  def remove_items_on_bogof(order_summary)
-    order_summary[:B] -= order_summary[:E] / 2 if order_summary.key?(:B) && order_summary.key?(:E)
-    order_summary[:M] -= order_summary[:N] / 3 if order_summary.key?(:M) && order_summary.key?(:N)
-    order_summary[:Q] -= order_summary[:R] / 3 if order_summary.key?(:Q) && order_summary.key?(:R)
+  def remove_items_on_bogof(order)
+    order[:B] -= order[:E] / 2 if order.key?(:B) && order.key?(:E)
+    order[:M] -= order[:N] / 3 if order.key?(:M) && order.key?(:N)
+    order[:Q] -= order[:R] / 3 if order.key?(:Q) && order.key?(:R)
   end
 
   def add_items_on_special(specials_summary, item, quantity, quant_list)
@@ -124,8 +117,35 @@ class Checkout
     specials_summary[item] = item_quantity unless item_quantity == 0 || item_quantity.nil?
   end
 
-  def remove_items_on_special(order_summary, item, quantity, quant_list)
+  def remove_items_on_special(order, item, quantity, quant_list)
     remainder = quantity % quant_list[item] if quant_list.key?(item)
-    order_summary[item] = remainder unless remainder.nil?
+    order[item] = remainder unless remainder.nil?
+  end
+
+  def update_order_for_groups(order)
+    group_items = count_num_of_group_items(order)
+    groups_quantity = count_num_of_groups(group_items)
+    @running_total += groups_quantity * 45
+    @groups_remainder = group_items % 3
+    GROUP.each { |item| remove_group_items(order, group_items, item) if order.key?(item) }
+  end
+
+  def count_num_of_group_items(order)
+    group_items = 0
+    GROUP.each { |item| group_items += order[item] if order.key?(item) }
+    group_items
+  end
+
+  def count_num_of_groups(group_items)
+    group_items / 3
+  end
+
+  def remove_group_items(order, group_items, item)
+    if @groups_remainder <= order[item]
+      order[item] = @groups_remainder
+      @groups_remainder = 0
+    elsif @groups_remainder > order[item]
+      @groups_remainder -= order[item]
+    end
   end
 end
