@@ -1,11 +1,71 @@
 # noinspection RubyUnusedLocalVariable
 class Checkout
 
-  STOCK_PRICES = { A: 50, B: 30, C: 20, D: 15, E: 40 }
-  SPECIALS_QUANTS = { A: 5, B: 2 }
-  SPECIALS_PRICES = { A: 200, B: 45 }
-  SPECIALS_QUANTS_2 = { A: 3 }
-  SPECIALS_PRICES_2 = { A: 130 }
+  STOCK_PRICES = {
+    A: 50,
+    B: 30,
+    C: 20,
+    D: 15,
+    E: 40,
+    F: 10,
+    G: 20,
+    H: 10,
+    I: 35,
+    J: 60,
+    K: 80,
+    L: 90,
+    M: 15,
+    N: 40,
+    O: 10,
+    P: 50,
+    Q: 30,
+    R: 50,
+    S: 30,
+    T: 20,
+    U: 40,
+    V: 50,
+    W: 20,
+    X: 90,
+    Y: 10,
+    Z: 50 }
+
+  SPECIALS_QUANTS = {
+    A: 5,
+    B: 2,
+    F: 3,
+    H: 10,
+    K: 2,
+    P: 5,
+    Q: 3,
+    U: 4,
+    V: 3 }
+
+  SPECIALS_PRICES = {
+    A: 200,
+    B: 45,
+    F: 20,
+    H: 80,
+    K: 150,
+    P: 200,
+    Q: 80,
+    U: 120,
+    V: 130 }
+
+  SPECIALS_QUANTS_2 = {
+    A: 3,
+    H: 5,
+    V: 2 }
+
+  SPECIALS_PRICES_2 = {
+    A: 130,
+    H: 45,
+    V: 90 }
+
+  # BOGOF = {
+  #   E: { quant: 2, free: :B },
+  #   N: { quant: 3, free: :M },
+  #   R: { quant: 3, free: :Q }
+  # }
 
   def checkout(skus)
     return -1 if check_skus(skus) == false
@@ -54,9 +114,9 @@ class Checkout
   end
 
   def remove_items_on_bogof(order_summary)
-    if order_summary.key?(:B) && order_summary.key?(:E)
-      order_summary[:B] -= order_summary[:E] / 2
-    end
+    order_summary[:B] -= order_summary[:E] / 2 if order_summary.key?(:B) && order_summary.key?(:E)
+    order_summary[:M] -= order_summary[:N] / 3 if order_summary.key?(:M) && order_summary.key?(:N)
+    order_summary[:Q] -= order_summary[:R] / 3 if order_summary.key?(:Q) && order_summary.key?(:R)
   end
 
   def add_items_on_special(specials_summary, item, quantity, quant_list)
